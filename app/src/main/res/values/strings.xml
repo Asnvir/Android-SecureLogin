@@ -2,7 +2,6 @@
     <string name="app_name">SecureLogin</string>
     <string name="gps">GPS</string>
     <string name="time">Time</string>
-    <string name="location">Location</string>
     <string name="login">Login</string>
     <string name="password">Password</string>
     <string name="login_btn">Login</string>
