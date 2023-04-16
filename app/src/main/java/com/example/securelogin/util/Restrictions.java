@@ -9,7 +9,7 @@ public class Restrictions {
     private int maxPercentage;
     private String time;
 
-    //// Private constructor to prevent direct instantiation
+    // Private constructor to prevent direct instantiation
     private Restrictions() {
         // Initialize default values for coordinates, minPercentage, maxPercentage, time, etc.
     }
