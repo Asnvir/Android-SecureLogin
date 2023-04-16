@@ -91,7 +91,7 @@ public class StartActivity extends AppCompatActivity {
         // Get the location manager
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-        // Check if location permission is granted
+        /// Check if location permission is granted
         if (checkPermission()) {
 
             // Get the last known location from the location manager
