@@ -1,65 +1,41 @@
 package com.example.securelogin;
 
+import com.example.securelogin.factory.CombinationStrategy;
+import com.example.securelogin.factory.ConcreteCombinationStrategyFactory;
+
 public class StartModel {
-    private final LocationHandler locationHandler;
 
 
-    public StartModel (LocationHandler locationHandler){
-        this.locationHandler = locationHandler;
+    private double[] coordinates;
+    private int batteryPercentage;
+    private String currentTime;
+
+    public StartModel (){
+
     }
 
-    public void requestLocationUpdates() {
-        locationHandler.requestLocationUpdates();
+
+    public void login(boolean isGpsSelected, boolean isBatterySelected, boolean isTimeSelected) {
+        String combination =
+                        (isGpsSelected ? "1" : "0") + "|" +
+                        (isBatterySelected ? "1" : "0") + "|" +
+                        (isTimeSelected ? "1" : "0");
+
+
+        ConcreteCombinationStrategyFactory combinationStrategyFactory = new ConcreteCombinationStrategyFactory();
+        CombinationStrategy combinationStrategy = combinationStrategyFactory.createCombinationStrategy(combination,coordinates,currentTime,batteryPercentage);
     }
 
-    public void removeLocationUpdates() {
-        locationHandler.removeLocationUpdates();
+    public void setUpCoordinates(double[] coordinates) {
+        this.coordinates = coordinates;
     }
 
-    public void login(Boolean isGpsSelected, Boolean isTimeSelected, Boolean isLocationSelected) {
-        String combination = (isGpsSelected ? "1" : "0") + "|" + (isTimeSelected ? "1" : "0") + "|" + (isLocationSelected ? "1" : "0");
+    public void setUpBatteryPercentage(int batteryPercentage) {
+        this.batteryPercentage = batteryPercentage;
+    }
 
-        // Используем стратегию для выполнения действий в зависимости от комбинации
-        CombinationStrategy strategy = CombinationStrategyFactory.createCombinationStrategy(combination);
-        strategy.performActions();
+    public void setUpCurrentTime(String currentTime) {
+        this.currentTime = currentTime;
     }
 }
 
-
-//    public void login() {
-//        boolean isGpsSelected = this.isGpsSelected.getValue() != null && this.isGpsSelected.getValue();
-//        boolean isTimeSelected = this.isTimeSelected.getValue() != null && this.isTimeSelected.getValue();
-//        boolean isLocationSelected = this.isLocationSelected.getValue() != null && this.isLocationSelected.getValue();
-//
-//        String combination = (isGpsSelected ? "1" : "0") + "|" + (isTimeSelected ? "1" : "0") + "|" + (isLocationSelected ? "1" : "0");
-//
-//        switch (combination) {
-//            case "0|0|0":
-//                // Выполнить действия, когда ни один из компонентов не выбран
-//                break;
-//            case "0|0|1":
-//                // Выполнить действия для выбранного местоположения, но не выбранных GPS и времени
-//                break;
-//            case "0|1|0":
-//                // Выполнить действия для выбранного времени, но не выбранных GPS и местоположения
-//                break;
-//            case "0|1|1":
-//                // Выполнить действия для выбранного GPS и времени, но не выбранного местоположения
-//                break;
-//            case "1|0|0":
-//                // Выполнить действия для выбранного GPS, но не выбранных времени и местоположения
-//                break;
-//            case "1|0|1":
-//                // Выполнить действия для выбранного GPS и местоположения, но не выбранного времени
-//                break;
-//            case "1|1|0":
-//                // Выполнить действия для выбранного GPS и времени, но не выбранного местоположения
-//                break;
-//            case "1|1|1":
-//                // Выполнить действия для успешного входа, если все три компонента выбраны
-//                break;
-//            default:
-//                // Выполнить действия для остальных необработанных комбинаций
-//                break;
-//        }
-//    }

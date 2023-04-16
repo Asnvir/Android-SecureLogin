@@ -3,10 +3,12 @@ package com.example.securelogin;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.net.Uri;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.widget.Toast;
@@ -20,6 +22,10 @@ import android.Manifest;
 
 
 import com.example.securelogin.databinding.ActivityStartBinding;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 public class StartActivity extends AppCompatActivity {
 
@@ -41,22 +47,28 @@ public class StartActivity extends AppCompatActivity {
     }
 
     private void registerButtonActions() {
-        binding.loginCHCKBXLocation.setOnCheckedChangeListener((compoundButton, isChecked) -> {
+        binding.loginCHCKBXGps.setOnCheckedChangeListener((compoundButton, isChecked) -> {
             if (isChecked) {
-                handleLocationPermission();
+                handleGpsPermission();
             } else {
-                setLocationSelection(false);
+                setGpsSelection(false);
             }
         });
 
-        binding.loginCHCKBXBattery.setOnCheckedChangeListener(((compoundButton, isChecked) -> viewModel.setIsBatterySelected(isChecked)));
-        binding.loginCHCKBXTime.setOnCheckedChangeListener((compoundButton, isChecked) -> viewModel.setIsTimeSelected(isChecked));
+        binding.loginCHCKBXBattery.setOnCheckedChangeListener(((compoundButton, isChecked) -> {
+            viewModel.setBatteryPercentage(getBatteryPercentage(this));
+            viewModel.setIsBatterySelected(isChecked);
+        }));
+        binding.loginCHCKBXTime.setOnCheckedChangeListener((compoundButton, isChecked) -> {
+            viewModel.setTime(getCurrentTime());
+            viewModel.setIsTimeSelected(isChecked);
+        });
         binding.loginBTNLogin.setOnClickListener(view -> viewModel.login());
     }
 
     private void observeCHECKBoxes() {
-        viewModel.getIsLocationSelectedLiveData().observe(this, isChecked -> {
-            binding.loginCHCKBXLocation.setChecked(isChecked);
+        viewModel.getIsGpsSelectedLiveData().observe(this, isChecked -> {
+            binding.loginCHCKBXGps.setChecked(isChecked);
             Toast.makeText(this, isChecked.toString(), Toast.LENGTH_SHORT).show();
         });
         viewModel.getIsBatterySelectedLiveData().observe(this, isChecked -> binding.loginCHCKBXBattery.setChecked(isChecked));
@@ -67,53 +79,30 @@ public class StartActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        checkLocationPermission();
+        checkGpsPermission();
     }
 
     
-    private void checkLocationPermission() {
+    private void checkGpsPermission() {
         boolean isLocationPermissionGranted = checkPermission();
-        setLocationSelection(isLocationPermissionGranted);
+        setGpsSelection(isLocationPermissionGranted);
     }
 
-    private void handleLocationPermission() {
+    private void handleGpsPermission() {
         if (!checkPermission()) {
-            requestLocationPermission();
+            requestGpsPermission();
         } else {
-            setLocationCoordinates();
-            setLocationSelection(true);
+            setGpsSelection(true);
         }
     }
 
-    private void setLocationCoordinates() {
-        double[] location = {0.0, 0.0}; // Placeholder latitude and longitude values
 
-        // Get the location manager
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        //// Check if location permission is granted
-        if (checkPermission()) {
-
-            // Get the last known location from the location manager
-            Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-
-            // Check if last known location is available
-            if (lastKnownLocation != null) {
-                // Get the latitude and longitude from the last known location
-                location[0] = lastKnownLocation.getLatitude(); // Latitude
-                location[1] = lastKnownLocation.getLongitude(); // Longitude
-
-                viewModel.setL
-            }
-        }
-        // TODO: 16/04/2023  return location;
-    }
 
     private boolean checkPermission() {
         return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
-    private void requestLocationPermission() {
+    private void requestGpsPermission() {
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                 GPS_PERMISSION_REQUEST_CODE);
@@ -128,30 +117,30 @@ public class StartActivity extends AppCompatActivity {
 
     private void handlePermissionRequestResult(int requestCode, int[] grantResults) {
         if (requestCode == GPS_PERMISSION_REQUEST_CODE) {
-            if (isLocationPermissionGranted(grantResults)) {
-                handleLocationPermissionGranted();
+            if (isGpsPermissionGranted(grantResults)) {
+                handleGpsPermissionGranted();
             } else {
-                handleLocationPermissionDenied();
+                handleGpsPermissionDenied();
             }
         }
     }
 
-    private boolean isLocationPermissionGranted(int[] grantResults) {
+    private boolean isGpsPermissionGranted(int[] grantResults) {
         return grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
     }
 
-    private void handleLocationPermissionGranted() {
+    private void handleGpsPermissionGranted() {
         // GPS permission is granted, perform the GPS-related operation here
-        setLocationSelection(true);
+        setGpsSelection(true);
     }
 
-    private void handleLocationPermissionDenied() {
+    private void handleGpsPermissionDenied() {
         if (!shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
             // Permission denied and "Don't ask again" option selected, show a dialog to prompt user to open app settings
             showOpenSettingsDialog();
         } else {
             // Permission denied, but "Don't ask again" option not selected, show a rationale message or take appropriate action
-            setLocationSelection(false);
+            setGpsSelection(false);
             Toast.makeText(this, "GPS permission denied", Toast.LENGTH_SHORT).show();
         }
     }
@@ -168,15 +157,57 @@ public class StartActivity extends AppCompatActivity {
                     startActivity(intent);
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> {
-                    setLocationSelection(false);
+                    setGpsSelection(false);
                     dialog.dismiss();
                 })
                 .setCancelable(false)
                 .show();
     }
 
-    private void setLocationSelection(boolean isLocationPermissionGranted) {
+    private void setGpsSelection(boolean isLocationPermissionGranted) {
         viewModel.setIsLocationSelected(isLocationPermissionGranted);
+        if(isLocationPermissionGranted) setGpsCoordinates();
+    }
+
+    private void setGpsCoordinates() {
+        double[] location = {0.0, 0.0}; // Placeholder latitude and longitude values
+
+        // Get the location manager
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        // Check if location permission is granted
+        if (checkPermission()) {
+
+            // Get the last known location from the location manager
+            Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+            // Check if last known location is available
+            if (lastKnownLocation != null) {
+                // Get the latitude and longitude from the last known location
+                location[0] = lastKnownLocation.getLatitude(); // Latitude
+                location[1] = lastKnownLocation.getLongitude(); // Longitude
+
+                viewModel.setLocationCoordinates(location);
+            }
+        }
+
+    }
+
+    private int getBatteryPercentage(Context context) {
+        IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = context.registerReceiver(null, filter);
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        float batteryPct = level * 100 / (float) scale;
+        return Math.round(batteryPct);
+    }
+
+    private  String getCurrentTime() {
+        Calendar calendar = Calendar.getInstance();
+        Date currentTime = calendar.getTime();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
+        String formattedTime = simpleDateFormat.format(currentTime);
+        return formattedTime;
     }
 
 }

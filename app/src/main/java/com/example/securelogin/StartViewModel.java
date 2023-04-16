@@ -5,18 +5,19 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 public class StartViewModel extends ViewModel {
-    private final MutableLiveData<Boolean> isLocationSelectedLiveData = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> isGpsSelectedLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isBatterySelectedLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isTimeSelectedLiveData = new MutableLiveData<>();
+    private final StartModel startModel;
 
 
-    // Constructor
+
     public StartViewModel() {
-
+        startModel = new StartModel();
     }
 
     public void setIsLocationSelected(boolean selected) {
-        isLocationSelectedLiveData.setValue(selected);
+        isGpsSelectedLiveData.setValue(selected);
     }
 
     public void setIsBatterySelected(boolean selected) {
@@ -36,25 +37,31 @@ public class StartViewModel extends ViewModel {
         return isTimeSelectedLiveData;
     }
 
-    public LiveData<Boolean> getIsLocationSelectedLiveData() {
-        return isLocationSelectedLiveData;
+    public LiveData<Boolean> getIsGpsSelectedLiveData() {
+        return isGpsSelectedLiveData;
     }
 
 
     public void login() {
-        boolean isLocationSelected = isLocationSelectedLiveData.getValue() != null ? isLocationSelectedLiveData.getValue() : false;
+        boolean isGpsSelected = isGpsSelectedLiveData.getValue() != null ? isGpsSelectedLiveData.getValue() : false;
         boolean isBatterySelected = isBatterySelectedLiveData.getValue() != null ? isBatterySelectedLiveData.getValue() : false;
         boolean isTimeSelected = isTimeSelectedLiveData.getValue() != null ? isTimeSelectedLiveData.getValue() : false;
 
-        String combination =
-                (isLocationSelected ? "1" : "0") + "|" +
-                (isBatterySelected ? "1" : "0") + "|" +
-                (isTimeSelected ? "1" : "0");
 
-        CombinationStrategy strategy = CombinationStrategyFactory.createCombinationStrategy(combination);
+        startModel.login(isGpsSelected,isBatterySelected,isTimeSelected);
 
-        strategy.performActions();
     }
 
 
+    public void setLocationCoordinates(double[] coordinates) {
+        startModel.setUpCoordinates(coordinates);
+    }
+
+    public void setBatteryPercentage(int batteryPercentage) {
+        startModel.setUpBatteryPercentage(batteryPercentage);
+    }
+
+    public void setTime(String currentTime) {
+        startModel.setUpCurrentTime(currentTime);
+    }
 }
