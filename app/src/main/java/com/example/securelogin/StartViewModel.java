@@ -5,15 +5,24 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 public class StartViewModel extends ViewModel {
+
+    public interface LoginCallback {
+        void onLogin(Boolean isSuccess);
+    }
+
     private final MutableLiveData<Boolean> isGpsSelectedLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isBatterySelectedLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isTimeSelectedLiveData = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> isLogin = new MutableLiveData<>();
     private final StartModel startModel;
+    private LoginCallback loginCallback = isSuccess -> isLogin.setValue(isSuccess);
 
 
 
     public StartViewModel() {
+
         startModel = new StartModel();
+        startModel.setLoginCallback(loginCallback);
     }
 
     public void setIsLocationSelected(boolean selected) {
@@ -40,6 +49,11 @@ public class StartViewModel extends ViewModel {
     public LiveData<Boolean> getIsGpsSelectedLiveData() {
         return isGpsSelectedLiveData;
     }
+
+    public LiveData<Boolean> getIsLoginLiveData() {
+        return isLogin;
+    }
+
 
 
     public void login() {

@@ -29,10 +29,9 @@ import java.util.Date;
 
 public class StartActivity extends AppCompatActivity {
 
-    private ActivityStartBinding binding ;
-    private StartViewModel viewModel ;
+    private ActivityStartBinding binding;
+    private StartViewModel viewModel;
     private static final int GPS_PERMISSION_REQUEST_CODE = 1;
-
 
 
     @Override
@@ -49,7 +48,13 @@ public class StartActivity extends AppCompatActivity {
     private void registerButtonActions() {
         binding.loginCHCKBXGps.setOnCheckedChangeListener((compoundButton, isChecked) -> {
             if (isChecked) {
-                handleGpsPermission();
+                if (checkGpsPermission()) {
+                    // GPS permission is already granted, perform the GPS-related operation here
+                    setGpsSelection(true);
+                } else {
+                    // GPS permission is not granted, request the permission
+                    requestGpsPermission();
+                }
             } else {
                 setGpsSelection(false);
             }
@@ -63,7 +68,10 @@ public class StartActivity extends AppCompatActivity {
             viewModel.setTime(getCurrentTime());
             viewModel.setIsTimeSelected(isChecked);
         });
-        binding.loginBTNLogin.setOnClickListener(view -> viewModel.login());
+        binding.loginBTNLogin.setOnClickListener(view -> {
+            getCoordinates();
+            viewModel.login();
+        });
     }
 
     private void observeCHECKBoxes() {
@@ -73,75 +81,61 @@ public class StartActivity extends AppCompatActivity {
         });
         viewModel.getIsBatterySelectedLiveData().observe(this, isChecked -> binding.loginCHCKBXBattery.setChecked(isChecked));
         viewModel.getIsTimeSelectedLiveData().observe(this, isChecked -> binding.loginCHCKBXTime.setChecked(isChecked));
+        viewModel.getIsLoginLiveData().observe(this, isLogin -> {
+            if (isLogin) {
+                Toast.makeText(this, "SUCCESS", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "FAILED", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    
+
     @Override
     protected void onResume() {
         super.onResume();
-        checkGpsPermission();
-    }
-
-    
-    private void checkGpsPermission() {
-        boolean isLocationPermissionGranted = checkPermission();
-        setGpsSelection(isLocationPermissionGranted);
-    }
-
-    private void handleGpsPermission() {
-        if (!checkPermission()) {
-            requestGpsPermission();
-        } else {
+        if (checkGpsPermission()) {
+            // GPS permission is already granted, perform the GPS-related operation here
             setGpsSelection(true);
+        } else {
+            setGpsSelection(false);
         }
     }
 
 
-
-    private boolean checkPermission() {
-        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    private void requestGpsPermission() {
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, GPS_PERMISSION_REQUEST_CODE);
     }
 
-    private void requestGpsPermission() {
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                GPS_PERMISSION_REQUEST_CODE);
+
+    private void setGpsSelection(boolean isLocationPermissionGranted) {
+        if (isLocationPermissionGranted) viewModel.setLocationCoordinates(getCoordinates());
+        viewModel.setIsLocationSelected(isLocationPermissionGranted);
+    }
+
+    private boolean checkGpsPermission() {
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        handlePermissionRequestResult(requestCode, grantResults);
-    }
-
-    private void handlePermissionRequestResult(int requestCode, int[] grantResults) {
         if (requestCode == GPS_PERMISSION_REQUEST_CODE) {
-            if (isGpsPermissionGranted(grantResults)) {
-                handleGpsPermissionGranted();
+            boolean isGpsPermissionGranted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+
+            if (isGpsPermissionGranted) {
+                setGpsSelection(true);
             } else {
-                handleGpsPermissionDenied();
+                setGpsSelection(false);
+                if (!shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    // Permission denied and "Don't ask again" option selected, show a dialog to prompt user to open app settings
+                    showOpenSettingsDialog();
+                } else {
+                    // Permission denied, but "Don't ask again" option not selected, show a rationale message or take appropriate action
+                    Toast.makeText(this, "GPS permission denied", Toast.LENGTH_SHORT).show();
+                }
             }
-        }
-    }
-
-    private boolean isGpsPermissionGranted(int[] grantResults) {
-        return grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private void handleGpsPermissionGranted() {
-        // GPS permission is granted, perform the GPS-related operation here
-        setGpsSelection(true);
-    }
-
-    private void handleGpsPermissionDenied() {
-        if (!shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-            // Permission denied and "Don't ask again" option selected, show a dialog to prompt user to open app settings
-            showOpenSettingsDialog();
-        } else {
-            // Permission denied, but "Don't ask again" option not selected, show a rationale message or take appropriate action
-            setGpsSelection(false);
-            Toast.makeText(this, "GPS permission denied", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -157,41 +151,31 @@ public class StartActivity extends AppCompatActivity {
                     startActivity(intent);
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> {
-                    setGpsSelection(false);
                     dialog.dismiss();
                 })
                 .setCancelable(false)
                 .show();
     }
 
-    private void setGpsSelection(boolean isLocationPermissionGranted) {
-        viewModel.setIsLocationSelected(isLocationPermissionGranted);
-        if(isLocationPermissionGranted) setGpsCoordinates();
-    }
 
-    private void setGpsCoordinates() {
-        double[] location = {0.0, 0.0}; // Placeholder latitude and longitude values
-
-        // Get the location manager
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        // Check if location permission is granted
-        if (checkPermission()) {
-
-            // Get the last known location from the location manager
-            Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-
-            // Check if last known location is available
-            if (lastKnownLocation != null) {
-                // Get the latitude and longitude from the last known location
-                location[0] = lastKnownLocation.getLatitude(); // Latitude
-                location[1] = lastKnownLocation.getLongitude(); // Longitude
-
-                viewModel.setLocationCoordinates(location);
+    private double[] getCoordinates() {
+        double[] location = {0.0, 0.0};
+        if (checkGpsPermission()) {
+            LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            Location lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if (lastLocation != null) {
+                location[0] = lastLocation.getLatitude();
+                location[1] = lastLocation.getLongitude();
+                Toast.makeText(this, "Latitude: " + location[0] + ", Longitude: " + location[1], Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Failed to get GPS coordinates", Toast.LENGTH_SHORT).show();
             }
+        } else {
+            Toast.makeText(this, "GPS permission not granted", Toast.LENGTH_SHORT).show();
         }
-
+        return location;
     }
+
 
     private int getBatteryPercentage(Context context) {
         IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
@@ -202,12 +186,11 @@ public class StartActivity extends AppCompatActivity {
         return Math.round(batteryPct);
     }
 
-    private  String getCurrentTime() {
+    private String getCurrentTime() {
         Calendar calendar = Calendar.getInstance();
         Date currentTime = calendar.getTime();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
-        String formattedTime = simpleDateFormat.format(currentTime);
-        return formattedTime;
+        return simpleDateFormat.format(currentTime);
     }
 
 }

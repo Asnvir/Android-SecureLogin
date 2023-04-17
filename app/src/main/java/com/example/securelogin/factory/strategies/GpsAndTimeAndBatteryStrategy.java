@@ -8,13 +8,13 @@ public class GpsAndTimeAndBatteryStrategy implements CombinationStrategy {
     private final int batteryPercentage;
 
     public GpsAndTimeAndBatteryStrategy(double[] coordinates, String currentTime, int batteryPercentage) {
-        this.coordinates=coordinates;
+        this.coordinates = coordinates;
         this.currentTime = currentTime;
-        this.batteryPercentage =batteryPercentage;
+        this.batteryPercentage = batteryPercentage;
     }
 
     @Override
-    public void execute() {
-
+    public boolean isConditionValid() {
+        return false;
     }
 }

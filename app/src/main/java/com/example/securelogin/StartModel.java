@@ -9,6 +9,7 @@ public class StartModel {
     private double[] coordinates;
     private int batteryPercentage;
     private String currentTime;
+    private StartViewModel.LoginCallback loginCallback;
 
     public StartModel (){
 
@@ -24,6 +25,13 @@ public class StartModel {
 
         ConcreteCombinationStrategyFactory combinationStrategyFactory = new ConcreteCombinationStrategyFactory();
         CombinationStrategy combinationStrategy = combinationStrategyFactory.createCombinationStrategy(combination,coordinates,currentTime,batteryPercentage);
+
+        boolean isConditionValid = combinationStrategy.isConditionValid();
+
+        if(loginCallback != null){
+            loginCallback.onLogin(isConditionValid);
+        }
+
     }
 
     public void setUpCoordinates(double[] coordinates) {
@@ -36,6 +44,10 @@ public class StartModel {
 
     public void setUpCurrentTime(String currentTime) {
         this.currentTime = currentTime;
+    }
+
+    public void setLoginCallback(StartViewModel.LoginCallback loginCallback) {
+        this.loginCallback = loginCallback;
     }
 }
 

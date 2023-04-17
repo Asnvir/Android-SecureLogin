@@ -11,7 +11,8 @@ public class BatteryStrategy implements CombinationStrategy {
     }
 
     @Override
-    public void execute() {
+    public boolean isConditionValid() {
 
+        return false;
     }
 }

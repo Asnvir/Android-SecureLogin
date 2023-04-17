@@ -9,11 +9,11 @@ public class TimeAndBatteryStrategy implements CombinationStrategy {
     public TimeAndBatteryStrategy(String currentTime, int batteryPercentage) {
 
         this.currentTime = currentTime;
-        this.batteryPercentage =batteryPercentage;
+        this.batteryPercentage = batteryPercentage;
     }
 
     @Override
-    public void execute() {
-
+    public boolean isConditionValid() {
+        return false;
     }
 }

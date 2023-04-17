@@ -7,13 +7,13 @@ public class GpsAndTimeStrategy implements CombinationStrategy {
     private final String currentTime;
 
     public GpsAndTimeStrategy(double[] coordinates, String currentTime) {
-        this.coordinates=coordinates;
+        this.coordinates = coordinates;
         this.currentTime = currentTime;
 
     }
 
     @Override
-    public void execute() {
-
+    public boolean isConditionValid() {
+        return false;
     }
 }

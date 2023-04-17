@@ -4,7 +4,11 @@ public class Restrictions {
 
     private static Restrictions instance;  // Singleton instance
 
-    private double[] coordinates;
+    private double[] coordinates = {32.32424461545233, 34.853230991079904};
+    private double maxDistance = 201;
+
+
+
     private int minPercentage;
     private int maxPercentage;
     private String time;
@@ -32,8 +36,17 @@ public class Restrictions {
 
 
 
-    public double[] getCoordinates() {
-        return coordinates;
+    public double getLatCoordinate() {
+        return coordinates[0];
+    }
+
+
+    public double getLonCoordinate() {
+        return coordinates[1];
+    }
+
+    public double getMaxDistance() {
+        return maxDistance;
     }
 
     public int getMinPercentage() {
