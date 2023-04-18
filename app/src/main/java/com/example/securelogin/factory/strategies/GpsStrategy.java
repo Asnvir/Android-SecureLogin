@@ -37,12 +37,12 @@ public class GpsStrategy implements CombinationStrategy {
     public boolean isConditionValid() {
         double currentDistance = calculateDistance();
         // TODO: 18/04/2023 Убрать логи
-//        Log.d("distance", "User Coordinate: " + coordinates[0] + ", " + coordinates[1]);
-//        Log.d("distance", "Target Coordinate: " + Restrictions.getInstance().getLatCoordinate() + ", " + Restrictions.getInstance().getLonCoordinate());
-//        Log.d("distance", "Calculated Distance: " + currentDistance + " meters");
-//        Log.d("distance", "Maximum Distance: " +  Restrictions.getInstance().getMaxDistance() + " meters");
+        Log.d("distance", "User Coordinate: " + coordinates[0] + ", " + coordinates[1]);
+        Log.d("distance", "Target Coordinate: " + Restrictions.getInstance().getLatCoordinate() + ", " + Restrictions.getInstance().getLonCoordinate());
+        Log.d("distance", "Calculated Distance: " + currentDistance + " meters");
+        Log.d("distance", "Maximum Distance: " +  Restrictions.getInstance().getMaxDistance() + " meters");
         boolean result = currentDistance < Restrictions.getInstance().getMaxDistance();
-//        Log.d("distance", "isConditionValid: " + result);
+        Log.d("distance", "isConditionValid: " + result);
         return result;
     }
 

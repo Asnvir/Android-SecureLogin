@@ -3,6 +3,8 @@ package com.example.securelogin;
 import android.app.Application;
 
 import com.example.securelogin.util.Restrictions;
+import com.example.securelogin.util.BatteryUtil;
+
 
 public class Initializer extends Application {
     @Override
@@ -10,5 +12,6 @@ public class Initializer extends Application {
         super.onCreate();
 
         Restrictions.init();
+        BatteryUtil.init(this);
     }
 }

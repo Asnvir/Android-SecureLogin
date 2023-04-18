@@ -22,6 +22,12 @@ import android.Manifest;
 
 
 import com.example.securelogin.databinding.ActivityStartBinding;
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionDeniedResponse;
+import com.karumi.dexter.listener.PermissionGrantedResponse;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.single.PermissionListener;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -43,29 +49,50 @@ public class StartActivity extends AppCompatActivity {
         viewModel = new ViewModelProvider(this).get(StartViewModel.class); // Use ViewModelProvider to create ViewModel
         registerButtonActions();
         observeCHECKBoxes();
+
+
     }
 
     private void registerButtonActions() {
         binding.loginCHCKBXGps.setOnCheckedChangeListener((compoundButton, isChecked) -> {
             if (isChecked) {
-                if (checkGpsPermission()) {
-                    // GPS permission is already granted, perform the GPS-related operation here
-                    setGpsSelection(true);
-                } else {
-                    // GPS permission is not granted, request the permission
-                    requestGpsPermission();
-                }
+                Dexter.withContext(this)
+                        .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                        .withListener(new PermissionListener() {
+                            @Override
+                            public void onPermissionGranted(PermissionGrantedResponse permissionGrantedResponse) {
+                                // GPS permission granted, perform the GPS-related operation here
+                                setGpsSelection(true);
+                            }
+
+                            @Override
+                            public void onPermissionDenied(PermissionDeniedResponse permissionDeniedResponse) {
+                                // GPS permission is denied, handle the case here
+                                if (permissionDeniedResponse.isPermanentlyDenied()) {
+                                    // Show custom dialog to navigate to app's settings
+                                    showSettingsDialog();
+                                }
+                                setGpsSelection(false);
+                            }
+
+                            @Override
+                            public void onPermissionRationaleShouldBeShown(PermissionRequest permissionRequest, PermissionToken permissionToken) {
+                                // Show a rationale message for the permission
+                                permissionToken.continuePermissionRequest();
+                            }
+                        })
+                        .check();
             } else {
                 setGpsSelection(false);
             }
         });
 
         binding.loginCHCKBXBattery.setOnCheckedChangeListener(((compoundButton, isChecked) -> {
-            viewModel.setBatteryPercentage(getBatteryPercentage(this));
+            // TODO: 18/04/2023   viewModel.setBatteryPercentage(getBatteryPercentage(this));
             viewModel.setIsBatterySelected(isChecked);
         }));
         binding.loginCHCKBXTime.setOnCheckedChangeListener((compoundButton, isChecked) -> {
-            viewModel.setTime(getCurrentTime());
+            // TODO: 18/04/2023    viewModel.setTime(getCurrentTime());
             viewModel.setIsTimeSelected(isChecked);
         });
         binding.loginBTNLogin.setOnClickListener(view -> {
@@ -90,6 +117,32 @@ public class StartActivity extends AppCompatActivity {
         });
     }
 
+    private void showSettingsDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Permission Denied")
+                .setMessage("GPS permission is required for this feature. Please go to app settings and enable the GPS permission.")
+                .setPositiveButton("Settings", (dialog, which) -> {
+                    // Open app settings page
+                    openAppSettings();
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    // Handle cancel button click
+                    // Do something here, e.g. show a message or close the dialog
+                    setGpsSelection(false);
+                    Toast.makeText(this, "Permission Denied. GPS feature will not work.", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                })
+                .show();
+    }
+
+
+    private void openAppSettings() {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.fromParts("package", getPackageName(), null));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+    }
+
 
     @Override
     protected void onResume() {
@@ -102,12 +155,6 @@ public class StartActivity extends AppCompatActivity {
         }
     }
 
-
-    private void requestGpsPermission() {
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, GPS_PERMISSION_REQUEST_CODE);
-    }
-
-
     private void setGpsSelection(boolean isLocationPermissionGranted) {
         if (isLocationPermissionGranted) viewModel.setLocationCoordinates(getCoordinates());
         viewModel.setIsLocationSelected(isLocationPermissionGranted);
@@ -116,47 +163,6 @@ public class StartActivity extends AppCompatActivity {
     private boolean checkGpsPermission() {
         return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
-
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == GPS_PERMISSION_REQUEST_CODE) {
-            boolean isGpsPermissionGranted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
-
-            if (isGpsPermissionGranted) {
-                setGpsSelection(true);
-            } else {
-                setGpsSelection(false);
-                if (!shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                    // Permission denied and "Don't ask again" option selected, show a dialog to prompt user to open app settings
-                    showOpenSettingsDialog();
-                } else {
-                    // Permission denied, but "Don't ask again" option not selected, show a rationale message or take appropriate action
-                    Toast.makeText(this, "GPS permission denied", Toast.LENGTH_SHORT).show();
-                }
-            }
-        }
-    }
-
-    private void showOpenSettingsDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Permission Denied")
-                .setMessage("GPS permission is required for this app. Please open app settings and enable the GPS permission.")
-                .setPositiveButton("Open Settings", (dialog, which) -> {
-                    // Open app settings
-                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                    Uri uri = Uri.fromParts("package", getPackageName(), null);
-                    intent.setData(uri);
-                    startActivity(intent);
-                })
-                .setNegativeButton("Cancel", (dialog, which) -> {
-                    dialog.dismiss();
-                })
-                .setCancelable(false)
-                .show();
-    }
-
 
     private double[] getCoordinates() {
         double[] location = {0.0, 0.0};
@@ -177,20 +183,12 @@ public class StartActivity extends AppCompatActivity {
     }
 
 
-    private int getBatteryPercentage(Context context) {
-        IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = context.registerReceiver(null, filter);
-        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-        float batteryPct = level * 100 / (float) scale;
-        return Math.round(batteryPct);
-    }
-
-    private String getCurrentTime() {
-        Calendar calendar = Calendar.getInstance();
-        Date currentTime = calendar.getTime();
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
-        return simpleDateFormat.format(currentTime);
-    }
+    // TODO: 18/04/2023
+//    private String getCurrentTime() {
+//        Calendar calendar = Calendar.getInstance();
+//        Date currentTime = calendar.getTime();
+//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+//        return simpleDateFormat.format(currentTime);
+//    }
 
 }

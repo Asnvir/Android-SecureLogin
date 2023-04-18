@@ -8,9 +8,8 @@ public class Restrictions {
     private double maxDistance = 201;
 
 
-
-    private int minPercentage;
-    private int maxPercentage;
+    private int minPercentage = 50;
+    private int maxPercentage = 100;
     private String time;
 
     // Private constructor to prevent direct instantiation
@@ -33,7 +32,6 @@ public class Restrictions {
         }
         return instance;
     }
-
 
 
     public double getLatCoordinate() {
