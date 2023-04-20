@@ -4,37 +4,66 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.securelogin.util.BatteryUtil;
+import com.example.securelogin.util.GpsUtil;
+
 public class StartViewModel extends ViewModel {
 
     public interface LoginCallback {
         void onLogin(Boolean isSuccess);
+
+        void isGpsSelected(Boolean isGpsSelected);
+
+        void isTimeSelected(Boolean isTimeSelected);
+
+        void isBatterySelected(Boolean isBatterySelected);
     }
+
 
     private final MutableLiveData<Boolean> isGpsSelectedLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isBatterySelectedLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isTimeSelectedLiveData = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> isLogin = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> isLoginLiveData = new MutableLiveData<>();
     private final StartModel startModel;
-    private LoginCallback loginCallback = isSuccess -> isLogin.setValue(isSuccess);
 
 
+    public StartViewModel(GpsUtil gpsUtil, BatteryUtil batteryUtil) {
+        startModel = new StartModel(gpsUtil, batteryUtil);
+        LoginCallback mLoginCallback = new LoginCallback() {
+            @Override
+            public void onLogin(Boolean isSuccess) {
+                isLoginLiveData.setValue(isSuccess);
+            }
 
-    public StartViewModel() {
+            @Override
+            public void isGpsSelected(Boolean isGpsSelected) {
+                isGpsSelectedLiveData.setValue(isGpsSelected);
+            }
 
-        startModel = new StartModel();
-        startModel.setLoginCallback(loginCallback);
+            @Override
+            public void isTimeSelected(Boolean isTimeSelected) {
+                isTimeSelectedLiveData.setValue(isTimeSelected);
+            }
+
+            @Override
+            public void isBatterySelected(Boolean isBatterySelected) {
+                isBatterySelectedLiveData.setValue(isBatterySelected);
+            }
+        };
+        startModel.setStartViewModelCallback(mLoginCallback);
     }
 
     public void setIsLocationSelected(boolean selected) {
-        isGpsSelectedLiveData.setValue(selected);
+        startModel.setIsLocationSelected(selected);
     }
 
+
     public void setIsBatterySelected(boolean selected) {
-        isBatterySelectedLiveData.setValue(selected);
+        startModel.setIsBatterySelected(selected);
     }
 
     public void setIsTimeSelected(boolean selected) {
-        isTimeSelectedLiveData.setValue(selected);
+        startModel.setTimeSelected(selected);
     }
 
 
@@ -51,9 +80,8 @@ public class StartViewModel extends ViewModel {
     }
 
     public LiveData<Boolean> getIsLoginLiveData() {
-        return isLogin;
+        return isLoginLiveData;
     }
-
 
 
     public void login() {
@@ -62,20 +90,8 @@ public class StartViewModel extends ViewModel {
         boolean isTimeSelected = isTimeSelectedLiveData.getValue() != null ? isTimeSelectedLiveData.getValue() : false;
 
 
-        startModel.login(isGpsSelected,isBatterySelected,isTimeSelected);
+        startModel.login(isGpsSelected, isBatterySelected, isTimeSelected);
 
     }
 
-
-    public void setLocationCoordinates(double[] coordinates) {
-        startModel.setUpCoordinates(coordinates);
-    }
-
-    public void setBatteryPercentage(int batteryPercentage) {
-        startModel.setUpBatteryPercentage(batteryPercentage);
-    }
-
-    public void setTime(String currentTime) {
-        startModel.setUpCurrentTime(currentTime);
-    }
 }

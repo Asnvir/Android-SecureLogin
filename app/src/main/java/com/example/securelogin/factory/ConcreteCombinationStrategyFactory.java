@@ -1,13 +1,13 @@
 package com.example.securelogin.factory;
 
-import com.example.securelogin.factory.strategies.BatteryStrategy;
-import com.example.securelogin.factory.strategies.GpsAndBatteryStrategy;
-import com.example.securelogin.factory.strategies.GpsAndTimeAndBatteryStrategy;
-import com.example.securelogin.factory.strategies.GpsAndTimeStrategy;
-import com.example.securelogin.factory.strategies.GpsStrategy;
-import com.example.securelogin.factory.strategies.NoComponentsStrategy;
-import com.example.securelogin.factory.strategies.TimeAndBatteryStrategy;
-import com.example.securelogin.factory.strategies.TimeStrategy;
+import com.example.securelogin.factory.strategies.baseStrategies.BatteryStrategy;
+import com.example.securelogin.factory.strategies.combinationsStrategies.GpsAndBatteryStrategy;
+import com.example.securelogin.factory.strategies.combinationsStrategies.GpsAndTimeAndBatteryStrategy;
+import com.example.securelogin.factory.strategies.combinationsStrategies.GpsAndTimeStrategy;
+import com.example.securelogin.factory.strategies.baseStrategies.GpsStrategy;
+import com.example.securelogin.factory.strategies.combinationsStrategies.NoComponentsStrategy;
+import com.example.securelogin.factory.strategies.combinationsStrategies.TimeAndBatteryStrategy;
+import com.example.securelogin.factory.strategies.baseStrategies.TimeStrategy;
 
 public class ConcreteCombinationStrategyFactory implements CombinationStrategyFactory {
 

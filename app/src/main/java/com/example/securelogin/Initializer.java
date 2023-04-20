@@ -12,6 +12,6 @@ public class Initializer extends Application {
         super.onCreate();
 
         Restrictions.init();
-        BatteryUtil.init(this);
+
     }
 }

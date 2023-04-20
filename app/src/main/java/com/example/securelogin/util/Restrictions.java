@@ -4,17 +4,19 @@ public class Restrictions {
 
     private static Restrictions instance;  // Singleton instance
 
-    private double[] coordinates = {32.32424461545233, 34.853230991079904};
-    private double maxDistance = 201;
-
-
-    private int minPercentage = 50;
-    private int maxPercentage = 100;
+    private final double[] coordinates ;
+    private final double maxDistance ;
+    private final int minPercentage ;
+    private final int maxPercentage ;
     private String time;
 
     // Private constructor to prevent direct instantiation
     private Restrictions() {
-        // Initialize default values for coordinates, minPercentage, maxPercentage, time, etc.
+        coordinates = new double[]{32.32424461545233, 34.853230991079904};
+        maxDistance = 201;
+        minPercentage = 50;
+        maxPercentage = 100;
+        time = "2023-04-20 00:15";
     }
 
     // Method to initialize the singleton instance
@@ -34,12 +36,12 @@ public class Restrictions {
     }
 
 
-    public double getLatCoordinate() {
+    public double getTargetLatCoordinate() {
         return coordinates[0];
     }
 
 
-    public double getLonCoordinate() {
+    public double getTargetLonCoordinate() {
         return coordinates[1];
     }
 
@@ -55,7 +57,7 @@ public class Restrictions {
         return maxPercentage;
     }
 
-    public String getTime() {
+    public String getTargetTime() {
         return time;
     }
 }

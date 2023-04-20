@@ -1,8 +1,7 @@
-package com.example.securelogin.factory.strategies;
+package com.example.securelogin.factory.strategies.baseStrategies;
 
 import android.location.Location;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.example.securelogin.factory.CombinationStrategy;
 import com.example.securelogin.util.Restrictions;
@@ -21,8 +20,8 @@ public class GpsStrategy implements CombinationStrategy {
     private double calculateDistance() {
         double latUser = coordinates[0];
         double lonUser = coordinates[1];
-        double latTarget = Restrictions.getInstance().getLatCoordinate();
-        double lonTarget = Restrictions.getInstance().getLonCoordinate();
+        double latTarget = Restrictions.getInstance().getTargetLatCoordinate();
+        double lonTarget = Restrictions.getInstance().getTargetLonCoordinate();
 
         // Call Location.distanceBetween() method to calculate distance
         float[] results = new float[1];
@@ -36,9 +35,9 @@ public class GpsStrategy implements CombinationStrategy {
     @Override
     public boolean isConditionValid() {
         double currentDistance = calculateDistance();
-        // TODO: 18/04/2023 Убрать логи
+        // TODO: Remove logs
         Log.d("distance", "User Coordinate: " + coordinates[0] + ", " + coordinates[1]);
-        Log.d("distance", "Target Coordinate: " + Restrictions.getInstance().getLatCoordinate() + ", " + Restrictions.getInstance().getLonCoordinate());
+        Log.d("distance", "Target Coordinate: " + Restrictions.getInstance().getTargetLatCoordinate() + ", " + Restrictions.getInstance().getTargetLonCoordinate());
         Log.d("distance", "Calculated Distance: " + currentDistance + " meters");
         Log.d("distance", "Maximum Distance: " +  Restrictions.getInstance().getMaxDistance() + " meters");
         boolean result = currentDistance < Restrictions.getInstance().getMaxDistance();
