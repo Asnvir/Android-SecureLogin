@@ -14,8 +14,8 @@ public class Restrictions {
         coordinates = new double[]{33.32424461545233, 34.853230991079904};
         maxDistance = 1;
         minPercentage = 50;
-        maxPercentage = 60;
-        time = "2023-04-21 23:38";
+        maxPercentage = 100;
+        time = "2023-04-22 00:45";
     }
 
     public static void init() {
