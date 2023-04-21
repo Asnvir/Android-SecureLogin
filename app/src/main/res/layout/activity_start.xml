@@ -55,22 +55,25 @@
             android:orientation="vertical"
             android:padding="10dp">
 
-            <androidx.appcompat.widget.AppCompatTextView
+            <androidx.appcompat.widget.AppCompatEditText
                 android:id="@+id/login_TXT_login"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
                 android:hint="@string/login">
 
-            </androidx.appcompat.widget.AppCompatTextView>
+            </androidx.appcompat.widget.AppCompatEditText>
 
-            <androidx.appcompat.widget.AppCompatTextView
+            <androidx.appcompat.widget.AppCompatEditText
                 android:id="@+id/login_TXT_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:hint="@string/password">
 
-            </androidx.appcompat.widget.AppCompatTextView>
+            </androidx.appcompat.widget.AppCompatEditText>
+
+
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/login_BTN_login"
