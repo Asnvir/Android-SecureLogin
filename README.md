@@ -11,6 +11,7 @@
     <li>Secure login by checking various conditions.</li>
     <li>Ability to select/deselect GPS location, battery level, and time as login conditions.</li>
     <li>Alert message with detailed condition results.</li>
+    <li>The SingleLiveData class is used to observe changes to the condition results and update the UI accordingly. This ensures that the UI is always up to date with the latest condition results and provides a seamless user experience.</li>
   </ul>
 
   <h2>Patterns</h2>
