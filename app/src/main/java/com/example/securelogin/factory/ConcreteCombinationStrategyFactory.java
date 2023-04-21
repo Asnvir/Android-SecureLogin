@@ -5,7 +5,7 @@ import com.example.securelogin.factory.strategies.combinationsStrategies.GpsAndB
 import com.example.securelogin.factory.strategies.combinationsStrategies.GpsAndTimeAndBatteryStrategy;
 import com.example.securelogin.factory.strategies.combinationsStrategies.GpsAndTimeStrategy;
 import com.example.securelogin.factory.strategies.baseStrategies.GpsStrategy;
-import com.example.securelogin.factory.strategies.combinationsStrategies.NoComponentsStrategy;
+import com.example.securelogin.factory.strategies.baseStrategies.NoComponentsStrategy;
 import com.example.securelogin.factory.strategies.combinationsStrategies.TimeAndBatteryStrategy;
 import com.example.securelogin.factory.strategies.baseStrategies.TimeStrategy;
 
@@ -90,27 +90,3 @@ public class ConcreteCombinationStrategyFactory implements CombinationStrategyFa
 
 
 }
-// Дополнительный метод для создания CombinationStrategy на основе комбинации компонентов
-//    public CombinationStrategy createCombinationStrategy(String combination) {
-//        // Ваша логика для создания CombinationStrategy на основе переданной комбинации
-//        // Может быть реализована здесь
-//        // Например:
-//        if ("0|0|0".equals(combination)) {
-//            return createNoComponentsStrategy();
-//        } else if ("0|0|1".equals(combination)) {
-//            return createTimeStrategy();
-//        } else if ("0|1|0".equals(combination)) {
-//            return createBatteryStrategy();
-//        } else if ("0|1|1".equals(combination)) {
-//            return createTimeAndBatteryStrategy();
-//        } else if ("1|0|0".equals(combination)) {
-//            return createGpsStrategy();
-//        } else if ("1|0|1".equals(combination)) {
-//            return createGpsAndTimeStrategy();
-//        } else if ("1|1|0".equals(combination)) {
-//            return createGpsAndBatteryStrategy();
-//        } else if ("1|1|1".equals(combination)){
-//            return createGpsAndTimeAndBatteryStrategy();
-//        }
-//        return null;
-//    }

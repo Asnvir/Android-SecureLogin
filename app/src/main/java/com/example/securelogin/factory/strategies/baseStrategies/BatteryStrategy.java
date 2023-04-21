@@ -1,8 +1,7 @@
 package com.example.securelogin.factory.strategies.baseStrategies;
 
-import android.util.Log;
-
 import com.example.securelogin.factory.CombinationStrategy;
+import com.example.securelogin.util.ConditionResult;
 import com.example.securelogin.util.Restrictions;
 
 public class BatteryStrategy implements CombinationStrategy {
@@ -14,18 +13,16 @@ public class BatteryStrategy implements CombinationStrategy {
     }
 
     @Override
-    public boolean isConditionValid() {
-
+    public ConditionResult isConditionValid() {
+        ConditionResult conditionResult = new ConditionResult();
         int minPercentage = Restrictions.getInstance().getMinPercentage();
         int maxPercentage = Restrictions.getInstance().getMaxPercentage();
-        boolean result = batteryPercentage >= minPercentage && batteryPercentage <= maxPercentage;
-        // TODO: Remove logs
-        Log.d("battery", "Battery Percentage: " + batteryPercentage);
-        Log.d("battery", "Minimum Percentage: " + minPercentage);
-        Log.d("battery", "Maximum Percentage: " + maxPercentage);
-        Log.d("battery", "isConditionValid: " + result);
 
-        return result;
+        conditionResult.setBatteryChecked(true);
+        conditionResult.setBatteryValid(batteryPercentage >= minPercentage && batteryPercentage <= maxPercentage);
+        conditionResult.setResult(batteryPercentage >= minPercentage && batteryPercentage <= maxPercentage);
+
+        return  conditionResult;
 
     }
 }

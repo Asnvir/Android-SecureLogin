@@ -1,45 +1,22 @@
 package com.example.securelogin;
 
 import android.app.AlertDialog;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationManager;
-import android.net.Uri;
-import android.os.BatteryManager;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
+import androidx.core.text.HtmlCompat;
 import androidx.lifecycle.ViewModelProvider;
-
-import android.Manifest;
-
 
 import com.example.securelogin.databinding.ActivityStartBinding;
 import com.example.securelogin.util.BatteryUtil;
+import com.example.securelogin.util.ConditionResult;
 import com.example.securelogin.util.GpsUtil;
-import com.karumi.dexter.Dexter;
-import com.karumi.dexter.PermissionToken;
-import com.karumi.dexter.listener.PermissionDeniedResponse;
-import com.karumi.dexter.listener.PermissionGrantedResponse;
-import com.karumi.dexter.listener.PermissionRequest;
-import com.karumi.dexter.listener.single.PermissionListener;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 
 public class StartActivity extends AppCompatActivity {
 
     private ActivityStartBinding binding;
     private StartViewModel viewModel;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,19 +29,9 @@ public class StartActivity extends AppCompatActivity {
         viewModel = new ViewModelProvider(this, new StartViewModelFactory(mGpsUtil,mBatteryUtil))
                 .get(StartViewModel.class);
 
-
-
         registerButtonActions();
-        observeCHECKBoxes();
-
-
+        observeViewModel();
     }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
 
     private void registerButtonActions() {
         binding.loginCHCKBXGps.setOnCheckedChangeListener((compoundButton, isChecked) -> viewModel.setIsLocationSelected(isChecked));
@@ -73,29 +40,51 @@ public class StartActivity extends AppCompatActivity {
         binding.loginBTNLogin.setOnClickListener(view -> viewModel.login());
     }
 
-    private void observeCHECKBoxes() {
+    private void observeViewModel() {
         viewModel.getIsGpsSelectedLiveData().observe(this, isChecked -> binding.loginCHCKBXGps.setChecked(isChecked));
         viewModel.getIsBatterySelectedLiveData().observe(this, isChecked -> binding.loginCHCKBXBattery.setChecked(isChecked));
         viewModel.getIsTimeSelectedLiveData().observe(this, isChecked -> binding.loginCHCKBXTime.setChecked(isChecked));
-        viewModel.getIsLoginLiveData().observe(this, isLogin -> {
-            if (isLogin) {
-                Toast.makeText(this, "SUCCESS", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "FAILED", Toast.LENGTH_SHORT).show();
-            }
-        });
+        viewModel.getErrorMessageLiveData().observe(this,error -> Toast.makeText(this, error, Toast.LENGTH_SHORT).show());
+        viewModel.getConditionResultMutableLiveData().observe(this, this::showAlertMessage);
     }
 
+    public void showAlertMessage(ConditionResult conditionResult) {
+        String alertMessage = "";
 
+        if (conditionResult.isNoComponentsChecked()) {
+            alertMessage += "<br><b>Result: </b>";
+            alertMessage += conditionResult.isResult() ? "<b><font color='green'>✓</font></b>" : "<b><font color='red'>✕</font></b>";
+            alertMessage += "<br>";
+        } else {
+            if (conditionResult.isGpsChecked()) {
+                alertMessage += "GPS: ";
+                alertMessage += conditionResult.isGpsValid() ? "<font color='green'>✓</font>" : "<font color='red'>✕</font>";
+                alertMessage += "<br>";
+            }
+            if (conditionResult.isBatteryChecked()) {
+                alertMessage += "Battery: ";
+                alertMessage += conditionResult.isBatteryValid() ? "<font color='green'>✓</font>" : "<font color='red'>✕</font>";
+                alertMessage += "<br>";
+            }
+            if (conditionResult.isTimeChecked()) {
+                alertMessage += "Time: ";
+                alertMessage += conditionResult.isTimeValid() ? "<font color='green'>✓</font>" : "<font color='red'>✕</font>";
+                alertMessage += "<br>";
+            }
+            alertMessage += "<br><b>Result: </b>";
+            alertMessage += conditionResult.isResult() ? "<b><font color='green'>✓</font></b>" : "<b><font color='red'>✕</font></b>";
+            alertMessage += "<br>";
+        }
 
-
-
-    // TODO: 18/04/2023
-//    private String getCurrentTime() {
-//        Calendar calendar = Calendar.getInstance();
-//        Date currentTime = calendar.getTime();
-//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-//        return simpleDateFormat.format(currentTime);
-//    }
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Condition Result")
+                .setMessage(HtmlCompat.fromHtml(alertMessage, HtmlCompat.FROM_HTML_MODE_LEGACY))
+                .setCancelable(false)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    dialog.dismiss();
+                });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
 
 }

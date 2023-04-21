@@ -6,143 +6,84 @@ import com.example.securelogin.util.BatteryUtil;
 import com.example.securelogin.util.GpsUtil;
 import com.example.securelogin.util.TimeUtil;
 
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
-import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.disposables.Disposable;
-import io.reactivex.rxjava3.schedulers.Schedulers;
-
 public class StartModel {
 
     public interface GpsPermissionCallback {
         void onPermissionStatus(Boolean status);
 
-        void onLocationReceived(double[] coordinates);
     }
 
+    public interface GpsCoordinatesCallback {
+        void onGPSCoordinatesAvailable(double[] coordinates);
 
-    private double[] coordinates;
+        void onFailure(Exception e);
+    }
+
     private int batteryPercentage;
     private String currentTime;
     private final GpsUtil mGpsUtil;
     private final BatteryUtil mBatteryUtil;
     private StartViewModel.LoginCallback mStartViewModel;
-    private GpsPermissionCallback mGpsPermissionCallback = new GpsPermissionCallback() {
-        @Override
-        public void onPermissionStatus(Boolean status) {
-            mStartViewModel.isGpsSelected(status);
-        }
-
-        @Override
-        public void onLocationReceived(double[] coordinates) {
-            setUpCoordinates(coordinates);
-        }
-    };
-
 
     public StartModel(GpsUtil gpsUtil, BatteryUtil batteryUtil) {
         mBatteryUtil = batteryUtil;
         mGpsUtil = gpsUtil;
-
-        mGpsUtil.setGpsPermissionCallback(mGpsPermissionCallback);
     }
 
-
-//    public void login(boolean isGpsSelected, boolean isBatterySelected, boolean isTimeSelected) {
-//        String combination =
-//                        (isGpsSelected ? "1" : "0") + "|" +
-//                        (isBatterySelected ? "1" : "0") + "|" +
-//                        (isTimeSelected ? "1" : "0");
-//
-//
-//        if(isGpsSelected && mGpsUtil != null){
-//            mGpsUtil.getCoordinates();
-//        }
-//
-//        if(isBatterySelected && mBatteryUtil != null){
-//            batteryPercentage = mBatteryUtil.getBatteryPercentage();
-//        }
-//
-//        if(isTimeSelected){
-//            currentTime = TimeUtil.getCurrentTime();
-//        }
-//
-//
-//        ConcreteCombinationStrategyFactory combinationStrategyFactory = new ConcreteCombinationStrategyFactory();
-//        CombinationStrategy combinationStrategy = combinationStrategyFactory.createCombinationStrategy(combination,coordinates,currentTime,batteryPercentage);
-//
-//        boolean isConditionValid = combinationStrategy.isConditionValid();
-//
-//        if(mStartViewModel != null){
-//            mStartViewModel.onLogin(isConditionValid);
-//        }
-//    }
-
-    private Disposable subscription;
 
     public void login(boolean gpsIsSelected, boolean batteryIsSelected, boolean timeIsSelected) {
         String combination =
                 (gpsIsSelected ? "1" : "0") + "|" +
-                (batteryIsSelected ? "1" : "0") + "|" +
-                (timeIsSelected ? "1" : "0");
+                        (batteryIsSelected ? "1" : "0") + "|" +
+                        (timeIsSelected ? "1" : "0");
 
-        if (gpsIsSelected && mGpsUtil != null) {
-            subscription = Observable.fromCallable(() -> {
-                        double[] coordinates = mGpsUtil.getCoordinates();
-                        return checkCombinationStrategyValidity(combination, coordinates);
-                    })
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(isConditionValid -> {
-                        if (mStartViewModel != null) {
-                            mStartViewModel.onLogin(isConditionValid);
-                        }
-                        unsubscribe();
-                    }, throwable -> unsubscribe());
+        if (batteryIsSelected) {
+            batteryPercentage = mBatteryUtil.getBatteryPercentage();
+        }
+
+        if (timeIsSelected) {
+            currentTime = TimeUtil.getCurrentTime();
+        }
+
+        if (gpsIsSelected) {
+            mGpsUtil.getCoordinates(new GpsCoordinatesCallback() {
+
+                @Override
+                public void onGPSCoordinatesAvailable(double[] coordinates) {
+                    executeLogin(combination, coordinates);
+                }
+
+                @Override
+                public void onFailure(Exception e) {
+                    mStartViewModel.setExceptionMessage(e.getMessage());
+                }
+            });
         } else {
-            double[] coordinates = new double[]{0, 0};
-            boolean isConditionValid = checkCombinationStrategyValidity(combination, coordinates);
-            if (mStartViewModel != null) {
-                mStartViewModel.onLogin(isConditionValid);
-            }
+            executeLogin(combination, new double[]{0, 0});
         }
     }
 
-    public void unsubscribe() {
-        if (subscription != null && !subscription.isDisposed()) {
-            subscription.dispose();
-        }
-    }
-
-
-    private boolean checkCombinationStrategyValidity(String combination, double[] coordinates) {
+    private void executeLogin(String combination, double[] coordinates) {
         ConcreteCombinationStrategyFactory combinationStrategyFactory = new ConcreteCombinationStrategyFactory();
         CombinationStrategy combinationStrategy = combinationStrategyFactory.createCombinationStrategy(combination, coordinates, currentTime, batteryPercentage);
-        return combinationStrategy.isConditionValid();
+        mStartViewModel.onLogin(combinationStrategy.isConditionValid());
     }
-
-
 
     public void setStartViewModelCallback(StartViewModel.LoginCallback startViewModelCallback) {
         this.mStartViewModel = startViewModelCallback;
     }
 
-    private void setUpCoordinates(double[] coordinates) {
-        this.coordinates = coordinates;
-    }
-
     public void setIsLocationSelected(boolean selected) {
         if (selected) {
-            mGpsUtil.checkPermission();
+            mGpsUtil.checkPermission(status -> mStartViewModel.isGpsSelected(status));
         } else {
             mStartViewModel.isGpsSelected(false);
         }
     }
 
-
     public void setIsBatterySelected(boolean selected) {
         mStartViewModel.isBatterySelected(selected);
     }
-
 
     public void setTimeSelected(boolean selected) {
         mStartViewModel.isTimeSelected(selected);

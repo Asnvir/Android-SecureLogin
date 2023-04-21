@@ -5,25 +5,26 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.securelogin.util.BatteryUtil;
+import com.example.securelogin.util.ConditionResult;
 import com.example.securelogin.util.GpsUtil;
+import com.example.securelogin.util.SingleLiveData;
 
 public class StartViewModel extends ViewModel {
 
     public interface LoginCallback {
-        void onLogin(Boolean isSuccess);
-
+        void onLogin(ConditionResult ConditionResult);
         void isGpsSelected(Boolean isGpsSelected);
-
         void isTimeSelected(Boolean isTimeSelected);
-
         void isBatterySelected(Boolean isBatterySelected);
+        void setExceptionMessage(String message);
     }
 
 
     private final MutableLiveData<Boolean> isGpsSelectedLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isBatterySelectedLiveData = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isTimeSelectedLiveData = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> isLoginLiveData = new MutableLiveData<>();
+    private final MutableLiveData<String> errorMessageLiveData = new MutableLiveData<>();
+    private final SingleLiveData<ConditionResult> conditionResultMutableLiveData = new SingleLiveData<>();
     private final StartModel startModel;
 
 
@@ -31,8 +32,8 @@ public class StartViewModel extends ViewModel {
         startModel = new StartModel(gpsUtil, batteryUtil);
         LoginCallback mLoginCallback = new LoginCallback() {
             @Override
-            public void onLogin(Boolean isSuccess) {
-                isLoginLiveData.setValue(isSuccess);
+            public void onLogin(ConditionResult conditionResult) {
+                conditionResultMutableLiveData.setValue(conditionResult);
             }
 
             @Override
@@ -49,14 +50,26 @@ public class StartViewModel extends ViewModel {
             public void isBatterySelected(Boolean isBatterySelected) {
                 isBatterySelectedLiveData.setValue(isBatterySelected);
             }
+
+            @Override
+            public void setExceptionMessage(String message) {
+                errorMessageLiveData.setValue(message);
+            }
         };
         startModel.setStartViewModelCallback(mLoginCallback);
+    }
+
+
+    public void login() {
+        boolean isGpsSelected = isGpsSelectedLiveData.getValue() != null ? isGpsSelectedLiveData.getValue() : false;
+        boolean isBatterySelected = isBatterySelectedLiveData.getValue() != null ? isBatterySelectedLiveData.getValue() : false;
+        boolean isTimeSelected = isTimeSelectedLiveData.getValue() != null ? isTimeSelectedLiveData.getValue() : false;
+        startModel.login(isGpsSelected, isBatterySelected, isTimeSelected);
     }
 
     public void setIsLocationSelected(boolean selected) {
         startModel.setIsLocationSelected(selected);
     }
-
 
     public void setIsBatterySelected(boolean selected) {
         startModel.setIsBatterySelected(selected);
@@ -65,7 +78,6 @@ public class StartViewModel extends ViewModel {
     public void setIsTimeSelected(boolean selected) {
         startModel.setTimeSelected(selected);
     }
-
 
     public LiveData<Boolean> getIsBatterySelectedLiveData() {
         return isBatterySelectedLiveData;
@@ -79,19 +91,10 @@ public class StartViewModel extends ViewModel {
         return isGpsSelectedLiveData;
     }
 
-    public LiveData<Boolean> getIsLoginLiveData() {
-        return isLoginLiveData;
+    public LiveData<String> getErrorMessageLiveData() {
+        return errorMessageLiveData;
     }
 
-
-    public void login() {
-        boolean isGpsSelected = isGpsSelectedLiveData.getValue() != null ? isGpsSelectedLiveData.getValue() : false;
-        boolean isBatterySelected = isBatterySelectedLiveData.getValue() != null ? isBatterySelectedLiveData.getValue() : false;
-        boolean isTimeSelected = isTimeSelectedLiveData.getValue() != null ? isTimeSelectedLiveData.getValue() : false;
-
-
-        startModel.login(isGpsSelected, isBatterySelected, isTimeSelected);
-
-    }
+    public LiveData<ConditionResult> getConditionResultMutableLiveData() {return conditionResultMutableLiveData;}
 
 }

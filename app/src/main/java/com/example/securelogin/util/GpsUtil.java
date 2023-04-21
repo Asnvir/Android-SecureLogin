@@ -10,7 +10,6 @@ import android.provider.Settings;
 import androidx.core.content.ContextCompat;
 
 import com.example.securelogin.StartModel;
-import com.example.securelogin.StartViewModel;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -22,11 +21,8 @@ import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
 
-import io.reactivex.rxjava3.core.Observable;
-
 
 public class GpsUtil {
-    private StartModel.GpsPermissionCallback mGpsPermissionCallback;
     private final Context context;
 
 
@@ -35,24 +31,22 @@ public class GpsUtil {
 
     }
 
-    public void checkPermission() {
+    public void checkPermission(StartModel.GpsPermissionCallback callback) {
         Dexter.withContext(context)
                 .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
                 .withListener(new PermissionListener() {
                     @Override
                     public void onPermissionGranted(PermissionGrantedResponse permissionGrantedResponse) {
-                        if (mGpsPermissionCallback != null)
-                            mGpsPermissionCallback.onPermissionStatus(true);
+                        callback.onPermissionStatus(true);
 
                     }
 
                     @Override
                     public void onPermissionDenied(PermissionDeniedResponse permissionDeniedResponse) {
                         if (permissionDeniedResponse.isPermanentlyDenied()) {
-                            showSettingsDialog();
+                            showSettingsDialog(callback);
                         }
-                        if (mGpsPermissionCallback != null)
-                            mGpsPermissionCallback.onPermissionStatus(false);
+                        callback.onPermissionStatus(false);
                     }
 
                     @Override
@@ -63,53 +57,25 @@ public class GpsUtil {
                 .check();
     }
 
+    public void getCoordinates(StartModel.GpsCoordinatesCallback callback) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            callback.onFailure(new RuntimeException("Location permission not granted"));
+            return;
+        }
 
-//    public void getCoordinates() {
-//        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-//                != PackageManager.PERMISSION_GRANTED) {
-//            return;
-//        }
-//
-//        FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
-//        fusedLocationClient.getLastLocation()
-//                .addOnSuccessListener(location -> {
-//                    if (location != null) {
-//                        double[] coordinates = {location.getLatitude(), location.getLongitude()};
-//                        if (mGpsPermissionCallback != null) {
-//                            mGpsPermissionCallback.onLocationReceived(coordinates);
-//                        }
-//                    }
-//                });
-//    }
-
-    public Observable<double[]> getCoordinates() {
-        return Observable.defer(() -> {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
-                return Observable.error(new RuntimeException("Location permission not granted"));
+        FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
+        fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
+            if (location != null) {
+                double[] coordinates = {location.getLatitude(), location.getLongitude()};
+                callback.onGPSCoordinatesAvailable(coordinates);
+            } else {
+                callback.onFailure(new RuntimeException("Location not available"));
             }
-
-            FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
-            return Observable.create(emitter -> {
-                fusedLocationClient.getLastLocation()
-                        .addOnSuccessListener(location -> {
-                            if (location != null) {
-                                double[] coordinates = {location.getLatitude(), location.getLongitude()};
-                                emitter.onNext(coordinates);
-                                emitter.onComplete();
-                            } else {
-                                emitter.onError(new RuntimeException("Location not available"));
-                            }
-                        })
-                        .addOnFailureListener(emitter::onError);
-            });
-        });
+        }).addOnFailureListener(callback::onFailure);
     }
 
-
-
-
-    private void showSettingsDialog() {
+    private void showSettingsDialog(StartModel.GpsPermissionCallback callback) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Permission Denied")
                 .setMessage("GPS permission is required for this feature. Please go to app settings and enable the GPS permission.")
@@ -117,8 +83,7 @@ public class GpsUtil {
                     openAppSettings();
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> {
-                    if (mGpsPermissionCallback != null)
-                        mGpsPermissionCallback.onPermissionStatus(false);
+                    callback.onPermissionStatus(false);
                     dialog.dismiss();
                 })
                 .show();
@@ -131,7 +96,4 @@ public class GpsUtil {
         context.startActivity(intent);
     }
 
-    public void setGpsPermissionCallback(StartModel.GpsPermissionCallback gpsPermissionCallback) {
-        mGpsPermissionCallback = gpsPermissionCallback;
-    }
 }
